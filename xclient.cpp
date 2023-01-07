@@ -17,7 +17,8 @@ int main()
     addr.sin_addr.s_addr = inet_addr(MYIP);
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT);
-    connect(clnt_sock, (struct sockaddr *)&addr, sizeof(addr));
+    int conret = connect(clnt_sock, (struct sockaddr *)&addr, sizeof(addr));
+    cout<<"Conret:"<<conret<<endl;
 
     char writebuf[1024] = "GET / HTTP/1.1\r\n";
     int write_ret = write(clnt_sock, writebuf, sizeof(writebuf));

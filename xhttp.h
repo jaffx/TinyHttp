@@ -12,5 +12,6 @@ typedef xhttp_request_info xhttp_req;
 void do_http_request(int sock);
 xhttp_req get_http_request_info(const char*);
 void show_xhttp_req(xhttp_req&);
+void show_sockaddr_in(const struct sockaddr_in &);
 
 #endif

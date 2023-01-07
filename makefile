@@ -1,13 +1,14 @@
 LIBS_DIR=-Lsrc/library/ 
 HEADERS_DIR=-Isrc/headers/
-LIBS=-l
+LIBS=-lpthread
+STD=-std=c++17
 SRC=main.cpp xhttp.cpp
 TARGET=main
 CLIENT=xclient
 all:$(TARGET) $(CLIENT)
 
 $(TARGET):$(SRC)
-	$(CXX)  $^  -o $@
+	$(CXX) $(STD)  $^  -o $@
 
 $(CLIENT):xclient.cpp
 	$(CXX)  $^ -o $@

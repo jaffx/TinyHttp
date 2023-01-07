@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <cstring>
 
+using std::cout, std::endl;
 
 void do_http_request(int sock){
     struct sockaddr_in clnt_addr;
@@ -17,6 +18,9 @@ void do_http_request(int sock){
 }
 
 xhttp_req get_http_request_info(const char *__http_req){
+    /*
+    * 解析http请求的请求行，保存到xhttp_req结构体中
+    */
     xhttp_req req;
     int idx = 0;
     int si =0;
@@ -39,7 +43,17 @@ xhttp_req get_http_request_info(const char *__http_req){
 }
 
 void show_xhttp_req(xhttp_req &req){
-    using namespace std;
+    /* 
+    展示请求行信息
+    */
+
     cout<<req.method<<' '<<req.url<<' '<<req.version<<endl;
 }
 
+void show_sockaddr_in(const struct sockaddr_in &addr){
+    /*
+    展示sock地址信息，sockaddr_in格式
+    */
+   cout<<"Address: "<<inet_ntoa(addr.sin_addr)<<":"<<ntohs(addr.sin_port)<<endl; 
+   
+}
