@@ -2,6 +2,10 @@
 
 void do_http_request(int sock)
 {
+    /*
+    @function
+        响应http请求
+    */
     struct sockaddr_in clnt_addr;
     socklen_t clnt_sock_len = sizeof(clnt_addr);
     char linebuf[2048];
@@ -65,24 +69,58 @@ void do_http_request(int sock)
     {
         content_length = stoi(req_header["content-length"]);
     }
-    auto && url_info_opt = ana_url(clnt_req_line.url);
-    struct xhttp_url_info clnt_url_info ;
-    if(url_info_opt==std::nullopt){
-        cout<<"URL解析失败"<<endl;
+    auto &&url_info_opt = ana_url(clnt_req_line.url);
+    struct xhttp_url_info clnt_url_info;
+    if (url_info_opt == std::nullopt)
+    {
+        cout << "URL解析失败" << endl;
     }
-    else{
+    else
+    {
         clnt_url_info = url_info_opt.value();
     }
-    cout<<clnt_url_info.path<<endl;
-    for(auto & kv : clnt_url_info.params){
-        cout<<kv.first<<"="<<kv.second<<endl;
+    cout << clnt_url_info.path << endl;
+    for (auto &kv : clnt_url_info.params)
+    {
+        cout << kv.first << "=" << kv.second << endl;
     }
-    not_found(sock);
+    char filename[1024] = "template/html";
+    response_html(sock, strcat(filename, clnt_url_info.path.data()));
     close(sock);
 }
-
-int not_found(int sock)
+int response_html(int sock, const char *html_src)
 {
+    char write_buffer[4096];
+    char line_buffer[1024];
+    char html_buffer[2048];
+    memset(write_buffer, 0, sizeof(write_buffer));
+    std::fstream fhtml(html_src, std::ios::in);
+    if (!fhtml)
+    {
+        //文件不存在
+        response_not_found(sock);
+    }
+    else
+    {
+        size_t file_size = xyq::get_file_size(html_src);
+        strcpy(write_buffer, "HTTP/1.1 200 OK\r\n");
+        // strcat(write_buffer, "Content-Type: test/html;charset=utf-8\r\n");
+        // strcat(write_buffer, "Content-Encoding: gzip\r\n");
+        sprintf(line_buffer, "Content-Length: %s\r\n", std::to_string(file_size).data());
+        strcat(write_buffer, line_buffer);
+        strcat(write_buffer, "\r\n");
+        while(read_html_file(fhtml, html_buffer, sizeof(html_buffer))>0){
+            strcat(write_buffer, html_buffer);
+        }
+        int write_len = write(sock, write_buffer, strlen(write_buffer));
+        cout<<"Write Success: "<<write_len<<" Bytes!"<<endl;
+    }
+}
+int response_not_found(int sock)
+{
+    /*
+    返回404信息
+    */
     char write_buffer[2048] = "HTTP/1.1 404 Not Found\r\n\r\n";
     write(sock, write_buffer, strlen(write_buffer));
     return 0;
@@ -202,12 +240,23 @@ std::optional<kv_pair> get_key_value(const char *buf)
         return std::nullopt;
 }
 
-int read_html_file(const char *filepath, char *buffer)
+int read_html_file(std::fstream &file, char *buffer, int bufsize)
 {
-    std::ifstream html;
-    html.open(filepath);
-    html >> buffer;
-    html.close();
+    /*
+    @function
+        从文件流中读取内容到buffer中
+    @return
+        文件流关闭无法读取，返回-1
+        文件读取完成，返回0
+        读取成功，返回读取内容长度
+    */
+    memset(buffer, 0, bufsize - 1);
+    if (!file.is_open())
+        return -1;
+    if (file.eof())
+        return 0;
+    file.read(buffer, bufsize);
+    return strlen(buffer);
 }
 
 std::optional<struct xhttp_url_info> ana_url(const char *url)
@@ -240,7 +289,7 @@ std::optional<struct xhttp_url_info> ana_url(const char *url)
         // std::cout << "KEY_VALUE___  " << pkey << " := " << pvalue << std::endl;
     }
 RETURN:
-    cout << "PATH: " << path << endl;
-    url_info.path=path;
+    // cout << "PATH: " << path << endl;
+    url_info.path = path;
     return url_info;
 }

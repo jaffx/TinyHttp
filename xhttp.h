@@ -8,6 +8,7 @@
 #include <fstream>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include<sys/stat.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <cstring>
@@ -48,9 +49,10 @@ std::optional<kv_pair> get_key_value(const char *buf);
 void show_xhttp_req_line(req_line &);
 void show_sockaddr_in(const struct sockaddr_in &);
 
-int read_html_file(const char *, char *);
+int read_html_file(std::fstream & file, char *buffer, int bufsize);
 
-int not_found(int);
+int response_not_found(int);
+int response_html(int sock, const char* html_src);
 std::optional<struct xhttp_url_info> ana_url(const char* url);
 
 #endif

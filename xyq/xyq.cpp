@@ -1,7 +1,5 @@
 #include "xyq.h"
-#include <cstring>
-#include <stdexcept>
-#include <iostream>
+
 int xyq::divide_str_by_separator(const char *inbuf, char *prefix, char *rest, char *sep, int max_prefix_len, int max_rest_len)
 {
     /*
@@ -86,4 +84,15 @@ int xyq::get_prefix_by_separator(const char *inbuf, char *prefix, char sep, int 
         prefix[idx] = '\0';
         return idx;
     }
+}
+
+size_t xyq::get_file_size(const char *file_path)
+{
+    if (file_path == NULL)
+        return 0;
+    struct stat statbuf;
+    if (stat(file_path, &statbuf) == 0)
+        return statbuf.st_size;
+    else
+        return 0;
 }
