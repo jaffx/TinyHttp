@@ -1,23 +1,21 @@
-#include "xServer/xServer.h"
-#include <iostream>
-#include <string>
-#include <cstring>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-using namespace std;
-xyq::xhttp_response func1(xyq::xhttp_request req){
-    xyq::xhttp_response rsp;
-    rsp.ok();
-    rsp.rsp_content = "找啊找啊找朋友！！";
-    return rsp;
+// 引入xServer头文件
+#include "xServer.h"
+// 定义服务器IP地址和端口
+#define XHTTP_IP "127.0.0.1"
+#define XHTTP_PORT 1120
+// 定义业务处理逻辑
+xyq::xhttp_response Myfunc(xyq::xhttp_request req)
+{
+    return xyq::render("hello.html");
 }
 int main()
 {
-    xyq::xhttp_server xs("TCP", "127.0.0.1", 1120);
-    xs.add_path("/",func1);
-    xs.run();
-    // auto &&http_con = xs.xs_get_connect();
-    // auto && clnt_req = http_con.get_http_request();
-    // xs.xs_close();
+    // 初始化http服务器
+    xyq::xhttp_server x_srv(XHTTP_IP, XHTTP_PORT);
+    // 添加业务处理逻辑与url映射关系
+    x_srv.add_path("/", Myfunc);
+    // 运行服务器
+    x_srv.run();
+    // 服务器运行完毕，回收服务器资源
+    x_srv.xs_close();
 }

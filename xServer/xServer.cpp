@@ -1,5 +1,6 @@
 #include "xServer.h"
 
+std::string xyq::template_path = "template/";
 xyq::xserver_base::xserver_base(std::string protocal, std::string ip, __uint16_t port)
 {
     this->__ip = ip;
@@ -158,8 +159,6 @@ void xyq::xhttp_server::run()
         std::cout << clnt_con.__ip << std::endl;
         std::thread *th = new std::thread(&xhttp_server::do_connect, this, clnt_con);
         th->detach();
-        // th.join();
-        // clnt_con.do_http__();
     }
 }
 
@@ -355,6 +354,14 @@ void xyq::xhttp_response::operator=(const xyq::xhttp_response &rsp)
     this->rsp_content = rsp.rsp_content;
     this->rsp_header = rsp.rsp_header;
 }
+void xyq::xhttp_response::set_content(std::string content)
+{
+    this->rsp_content = content;
+}
+void xyq::xhttp_response::add_content(std::string content)
+{
+    this->rsp_content += content;
+}
 xyq::xhttp_request xyq::xhttp_connect::get_http_request()
 {
     /*
@@ -468,4 +475,43 @@ void xyq::xhttp_connect::do_http_response(xyq::xhttp_response &rsp)
     // std::cout << rsp_str << std::endl;
     // std::cout << "######################" << std::endl;
     this->xc_write(rsp_str);
+}
+
+xyq::xhttp_response xyq::render(std::string path)
+{
+    // using xyq::template_path;
+    std::string fpath;
+    xhttp_response ret;
+    if (access(path.data(), 0) == 0)
+    {
+        // path直接指出路径
+        fpath = path;
+    }
+    else if (access((template_path + path).data(), 2))
+    {
+        // 通过template和path计算出路径
+        fpath = template_path + path;
+    }
+    else
+    {
+        // 未找到路径
+        std::cout << path << "文件不存在" << std::endl;
+        ret.not_found();
+        return ret;
+    }
+    // if (access(fpath.data(), 4) == 0)
+    // {
+    //     // 文件存在但是不可读
+    //     std::cout << "文件不可读" << std::endl;
+    //     ret.not_found();
+    //     return ret;
+    // }
+    std::string buffer;
+    std::fstream html_in;
+    html_in.open(fpath, std::ios::in);
+    while (std::getline(html_in, buffer))
+    {
+        ret.add_content(buffer + '\n');
+    }
+    return ret;
 }

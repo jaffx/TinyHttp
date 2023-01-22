@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <iostream>
+#include <fstream>
 #include <exception>
 #include <stdexcept>
 #include <cstring>
@@ -26,6 +27,8 @@ namespace xyq
     class xserver_exception;
     typedef xhttp_response (*xhttp_rsp_func)(xhttp_request);
 
+    // 设置参数及预定义值
+    extern std::string template_path;
     enum xserver_status
     {
         NOT_INIT = 0,       // 尚未初始化
@@ -35,7 +38,7 @@ namespace xyq
         SOCK_CLOSE = 4,     // sock关闭
         XSERVER_ERROR = -1, // 关键操作失败，server不可用
     };
-
+ 
     // 基类声明
     class xserver_base
     {
@@ -116,6 +119,8 @@ namespace xyq
         void set_status_code(int status);
         void set_header(std::string, std::string);
         void operator=(const xhttp_response &);
+        void set_content(std::string content);
+        void add_content(std::string content);
     };
 
     class xhttp_connect : public xconnect_base
@@ -144,9 +149,9 @@ namespace xyq
 
     public:
         friend xhttp_connect;
-        xhttp_server(std::string protocal, std::string ip, size_t port) : xserver_base(protocal, ip, port)
+        xhttp_server(std::string ip, size_t port) : xserver_base("tcp", ip, port)
         {
-            show_info();
+            // show_info();
         }
         ~xhttp_server() {}
         xhttp_connect xs_get_connect();
@@ -178,5 +183,7 @@ namespace xyq
         }
     };
 
+    // 函数定义
+    xhttp_response render(std::string path);
 }
 #endif
