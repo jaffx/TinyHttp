@@ -1,47 +1,23 @@
+#include "xServer/xServer.h"
 #include <iostream>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <string>
 #include <cstring>
-#include <thread>
+#include <netinet/in.h>
 #include <arpa/inet.h>
-#include "xhttp.h"
+#include <sys/socket.h>
 using namespace std;
-#define PORT 1120
-#define MYIP "127.0.0.1"
-
+xyq::xhttp_response func1(xyq::xhttp_request req){
+    xyq::xhttp_response rsp;
+    rsp.ok();
+    rsp.rsp_content = "找啊找啊找朋友！！";
+    return rsp;
+}
 int main()
 {
-    int serv_sock, clnt_sock;
-    struct sockaddr_in serv_addr, clnt_addr;
-        socklen_t clnt_len = sizeof(clnt_addr);
-    if ((serv_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        cout << "Socket初始化失败！" << endl;
-    }
-    // 设置服务器Socket地址
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr(MYIP);
-    cout << "[Server]";
-    show_sockaddr_in(serv_addr);
-    // 绑定服务器地址
-    if (::bind(serv_sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == -1){
-        cout << "该地址已经被使用，bind失败！" << endl;
-    }
-
-    if (listen(serv_sock, 5)==-1){
-        cout<<"该端口已被监听,listen失败！"<<endl;
-    }
-    while (clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_len))
-    {
-        cout << "####################" << endl;
-        cout << "[Clinet]";
-        show_sockaddr_in(clnt_addr);
-        thread th(do_http_request, clnt_sock);
-        th.detach();
-    }
-    close(serv_sock);
+    xyq::xhttp_server xs("TCP", "127.0.0.1", 1120);
+    xs.add_path("/",func1);
+    xs.run();
+    // auto &&http_con = xs.xs_get_connect();
+    // auto && clnt_req = http_con.get_http_request();
+    // xs.xs_close();
 }

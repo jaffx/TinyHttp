@@ -1,19 +1,28 @@
-#include "xyq/xyq.h"
+#include "xServer/xServer.h"
 #include <iostream>
-#include <fstream>
-
+#include <string>
+#include <cstring>
+#include <thread>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 using namespace std;
+class aa
+{
+public:
+    void show(int a)
+    {
+        for (int i = 0; i < a; i++)
+        {
+            cout << i << endl;
+        }
+    }
+};
+// void show(int a)
 
 int main()
 {
-    char buffer[20];
-    fstream hin;
-    // hin.open("template/html/xyq.html", std::ios::in| std::ios::out);
-    hin.open("testfile.txt", std::ios::in| std::ios::out);
-    while(!hin.eof()){
-        memset(buffer, 0, 5);
-        hin.read(buffer, 20);
-        cout<<strlen(buffer)<<buffer<<endl;
-    }
-    hin.close();
+    aa a;
+    std::thread th(&aa::show, &a, 2);
+    th.join();
 }

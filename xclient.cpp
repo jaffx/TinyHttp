@@ -18,14 +18,21 @@ int main()
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT);
     int conret = connect(clnt_sock, (struct sockaddr *)&addr, sizeof(addr));
-    cout<<"Conret:"<<conret<<endl;
+    cout << "Conret:" << conret << endl;
 
     char writebuf[1024] = "GET / HTTP/1.1\r\n";
-    int write_ret = write(clnt_sock, writebuf, sizeof(writebuf));
-    if (write_ret == -1){
-        cout<<"发送失败"<<endl;
+    char readbuf[1024];
+    memset(readbuf, 0, sizeof(readbuf));
+    int write_ret = write(clnt_sock, writebuf, strlen(writebuf));
+    if (write_ret == -1)
+    {
+        cout << "发送失败" << endl;
     }
-    else{
-        cout<<"成功字节数："<<write_ret<<endl;
+    else
+    {
+        cout << "成功字节数：" << write_ret << endl;
     }
+    int readlen = read(clnt_sock, readbuf, 1);
+    cout << readbuf << endl;
+    cout << readlen << endl;
 }
