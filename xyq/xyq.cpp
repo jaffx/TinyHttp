@@ -96,3 +96,10 @@ size_t xyq::get_file_size(const char *file_path)
     else
         return 0;
 }
+
+std::string xyq::get_time_now()
+{
+    auto &&t = std::chrono::system_clock::now();
+    std::chrono::system_clock();
+    return "";
+}

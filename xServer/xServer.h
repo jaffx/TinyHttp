@@ -17,6 +17,7 @@
 #include <unordered_map>
 #define CLNT_CONNECT_BUFFER_SIZE 65536 // 客户端链接写buffer长度
 #define HTTP_REQUEST_LINE_SIZE 8192
+#define HTTP_URL_SIZE 2048
 namespace xyq
 {
     // 类声明
@@ -38,7 +39,7 @@ namespace xyq
         SOCK_CLOSE = 4,     // sock关闭
         XSERVER_ERROR = -1, // 关键操作失败，server不可用
     };
- 
+
     // 基类声明
     class xserver_base
     {
@@ -85,18 +86,31 @@ namespace xyq
     // http服务声明
     class xhttp_request
     {
-    public:
-        int port;
+    protected:
+        bool enable = true;
+        std::string url;
         std::string ip;
         std::string method;
         std::string http_version;
-        std::string url;
-        std::unordered_map<std::string, std::string> req_header;
+        std::string path;
         std::string req_content;
-        std::string buffer;
         void set_header(std::string key, std::string value);
         void set_header(const std::pair<std::string, std::string> &kv);
+        void ana_url();
+        std::string buffer;
+
+    public:
+        int port;
+        std::unordered_map<std::string, std::string> req_header;
+        std::unordered_map<std::string, std::string> params;
+        std::string get_header(std::string);
+        bool get_enable() const;
+        std::string get_method() const;
+        std::string get_ip() const;
+        std::string get_version() const;
+        std::string get_path();
         std::string text();
+        friend class xhttp_connect;
     };
 
     class xhttp_response
@@ -121,6 +135,7 @@ namespace xyq
         void operator=(const xhttp_response &);
         void set_content(std::string content);
         void add_content(std::string content);
+        friend class xhttp_connect;
     };
 
     class xhttp_connect : public xconnect_base

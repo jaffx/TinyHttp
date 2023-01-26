@@ -156,7 +156,7 @@ void xyq::xhttp_server::run()
     {
         // 等待服务器连接请求
         auto &&clnt_con = this->xs_get_connect();
-        std::cout << clnt_con.__ip << std::endl;
+        // std::cout << clnt_con.__ip << std::endl;
         std::thread *th = new std::thread(&xhttp_server::do_connect, this, clnt_con);
         th->detach();
     }
@@ -289,6 +289,69 @@ void xyq::xhttp_request::set_header(const std::pair<std::string, std::string> &k
 {
     this->set_header(kv.first, kv.second);
 }
+std::string xyq::xhttp_request::get_header(std::string header_key)
+{
+    if (this->req_header.find(header_key) == this->req_header.end())
+    {
+        return "";
+    }
+    else
+    {
+        return this->req_header[header_key];
+    }
+}
+void xyq::xhttp_request::ana_url()
+{
+    char rest[HTTP_URL_SIZE];
+    char path[HTTP_URL_SIZE];
+    char key[HTTP_URL_SIZE];
+    char value[HTTP_URL_SIZE];
+    if (xyq::divide_str_by_separator(this->url.data(), path, rest, "?", sizeof(path), sizeof(rest)) == 0)
+    {
+        std::cout << "Get params:!!" << std::endl;
+        std::cout << path << std::endl;
+        std::cout << rest << std::endl;
+        this->path = path;
+        while (xyq::divide_str_by_separator(rest, value, rest, "&", sizeof(value), sizeof(rest)) == 0)
+        {
+            if (xyq::divide_str_by_separator(value, key, value, "=", sizeof(key), sizeof(value)) == 0)
+            {
+                this->params[key] = value;
+                // std::cout << key << " = " << value << std::endl;
+            }
+        }
+        if (xyq::divide_str_by_separator(value, key, value, "=", sizeof(key), sizeof(value)) == 0)
+        {
+            this->params[key] = value;
+            // std::cout << key << " = " << value << std::endl;
+        }
+    }
+    else
+    {
+        this->path = this->url;
+        // std::cout << "Get_Path: " << path << std::endl;
+    }
+}
+bool xyq::xhttp_request::get_enable() const
+{
+    return this->enable;
+}
+std::string xyq::xhttp_request::get_method() const
+{
+    return this->method;
+}
+std::string xyq::xhttp_request::get_ip() const
+{
+    return this->ip;
+}
+std::string xyq::xhttp_request::get_version() const
+{
+    return this->http_version;
+}
+std::string xyq::xhttp_request::get_path()
+{
+    return this->path;
+}
 std::string xyq::xhttp_request::text()
 {
     return this->req_content;
@@ -377,6 +440,8 @@ xyq::xhttp_request xyq::xhttp_connect::get_http_request()
     clnt_req.method = std::get<0>(req_line);
     clnt_req.url = std::get<1>(req_line);
     clnt_req.http_version = std::get<2>(req_line);
+    clnt_req.ana_url();
+    clnt_req.ip = this->__ip;
     while (this->get_line())
     {
         auto &&kv = this->ana_key_value();
@@ -450,10 +515,8 @@ void xyq::xhttp_connect::do_http__()
 
     // 解析http请求
     auto &&clnt_req = this->get_http_request();
-    // 处理path信息
-    auto &&path = clnt_req.url;
-    std::cout << clnt_req.method << "\t" << clnt_req.url << "\t" << clnt_req.http_version << std::endl;
     xhttp_response clnt_rsp;
+    auto &&path = clnt_req.get_path();
     auto rsp_func = this->__server->get_path_mapping(path);
     if (rsp_func)
     {
@@ -464,7 +527,7 @@ void xyq::xhttp_connect::do_http__()
     // 返回http响应
     this->do_http_response(clnt_rsp);
     // 打个日志记录一下
-    std::cout << "[Get URL]\t" << path << std::endl;
+    std::cout << "[" << clnt_req.get_ip() << "]: " << clnt_req.get_method() << " " << path << " --> " << clnt_rsp.status_code << " " << clnt_rsp.message << std::endl;
     // 关闭与客户端连接
     this->xc_close();
 }
@@ -487,7 +550,7 @@ xyq::xhttp_response xyq::render(std::string path)
         // path直接指出路径
         fpath = path;
     }
-    else if (access((template_path + path).data(), 2))
+    else if (access((template_path + path).data(), 0) == 0)
     {
         // 通过template和path计算出路径
         fpath = template_path + path;
@@ -495,17 +558,11 @@ xyq::xhttp_response xyq::render(std::string path)
     else
     {
         // 未找到路径
-        std::cout << path << "文件不存在" << std::endl;
+        // std::cout << "Render Error: " << path << "文件不存在" << std::endl;
         ret.not_found();
         return ret;
     }
-    // if (access(fpath.data(), 4) == 0)
-    // {
-    //     // 文件存在但是不可读
-    //     std::cout << "文件不可读" << std::endl;
-    //     ret.not_found();
-    //     return ret;
-    // }
+    // std::cout << "Find Path " << fpath << std::endl;
     std::string buffer;
     std::fstream html_in;
     html_in.open(fpath, std::ios::in);
