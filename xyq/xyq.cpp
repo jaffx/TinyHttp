@@ -99,7 +99,11 @@ size_t xyq::get_file_size(const char *file_path)
 
 std::string xyq::get_time_now()
 {
-    auto &&t = std::chrono::system_clock::now();
-    std::chrono::system_clock();
-    return "";
+    auto now = std::chrono::system_clock::now();
+    time_t tt = std::chrono::system_clock::to_time_t(now);
+    auto &&now_tm = std::localtime(&tt);
+    char buf[12];
+    memset(buf, 0, sizeof(buf));
+    std::strftime(buf, sizeof(buf), "%H:%M:%S", now_tm);
+    return buf;
 }
