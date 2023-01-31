@@ -1,8 +1,14 @@
 #include "xServer.h"
 
-std::string xyq::template_path = "template/";
+std::string xyq::template_path = "template/"; // html模板所在文件夹
 xyq::xserver_base::xserver_base(std::string protocal, std::string ip, __uint16_t port)
 {
+    /*
+    @brief
+        xserver_base类构造函数
+    @param
+        protocal TCP或者是UDP
+    */
     this->__ip = ip;
     this->__port = port;
     this->__protocal = protocal;
@@ -114,6 +120,9 @@ void xyq::xserver_base::xs_close()
 // }
 xyq::xhttp_connect *xyq::xhttp_server::xs_get_connect()
 {
+    /*
+        @brief 获取来自客户端的连接
+    */
     // 如果没有进行listen，则进行listen操作
     if (this->__status != LISTENING)
         this->xs_listen();
@@ -127,13 +136,19 @@ xyq::xhttp_connect *xyq::xhttp_server::xs_get_connect()
 }
 void xyq::xhttp_connect::run()
 {
-
+    /*
+    http连接开始工作
+    */
     std::thread th(&xhttp_connect::do_http__, this);
     this->set_pid(th.native_handle());
     th.detach();
 }
 void xyq::xhttp_server::add_path(std::string path, xyq::xhttp_rsp_func rsp_function)
 {
+    /*
+    @brief
+        向服务器添加url和业务处理逻辑映射
+    */
     if (path.size() == 0)
         return;
     if (this->rsp_mapping.find(path) != this->rsp_mapping.end())
@@ -142,6 +157,9 @@ void xyq::xhttp_server::add_path(std::string path, xyq::xhttp_rsp_func rsp_funct
 }
 xyq::xhttp_rsp_func xyq::xhttp_server::get_path_mapping(std::string url)
 {
+    /*
+    @brief  根据url获取处理逻辑函数
+    */
     if (this->rsp_mapping.find(url) == this->rsp_mapping.end())
         return NULL;
     else
@@ -149,6 +167,9 @@ xyq::xhttp_rsp_func xyq::xhttp_server::get_path_mapping(std::string url)
 }
 void xyq::xhttp_server::accept_http_connect()
 {
+    /*
+    @brief  接受http链接
+    */
     while (true)
     {
         // 等待服务器连接请求
@@ -165,6 +186,9 @@ void xyq::xhttp_server::accept_http_connect()
 }
 void xyq::xhttp_server::manage_http_connect()
 {
+    /*
+    @brief  对http连接进行管理
+    */
     while (true)
     {
 
@@ -183,7 +207,6 @@ void xyq::xhttp_server::manage_http_connect()
                     th.detach();
                 }
             }
-            std::cout << "连接数量：" << this->connects.size() << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(CONNECT_SCAN_TIME));
         }
         catch (xconnect_exception e)
@@ -315,6 +338,9 @@ void xyq::xhttp_connect::xc_close()
 }
 int xyq::xconnect_base::get_line()
 {
+    /*
+    @brief 从客户端连接的缓冲区读取一行内容
+    */
     char ch;
     char *dst = this->__buffer;
     int buf_size = sizeof(this->__buffer);
@@ -523,7 +549,7 @@ xyq::xhttp_connect::xhttp_connect(int socket, const struct sockaddr_in &addr, xh
 }
 xyq::xhttp_connect::~xhttp_connect()
 {
-    std::cout << __cid << "~" << std::endl;
+    // std::cout << __cid << "~" << std::endl;
 }
 xyq::xhttp_request xyq::xhttp_connect::get_http_request()
 {
@@ -573,6 +599,9 @@ xyq::xhttp_request xyq::xhttp_connect::get_http_request()
 }
 std::tuple<std::string, std::string, std::string> xyq::xhttp_connect::ana_req_line()
 {
+    /*
+    解析http请求行
+    */
     std::tuple<std::string, std::string, std::string> req_line;
     // std::cout << "解析请求行-->" << this->__buffer << std::endl;
     char rest[8192], prefix[1024];
@@ -600,6 +629,9 @@ std::tuple<std::string, std::string, std::string> xyq::xhttp_connect::ana_req_li
 }
 std::pair<std::string, std::string> xyq::xhttp_connect::ana_key_value()
 {
+    /*
+    解析请求头中的行
+    */
     std::pair<std::string, std::string> kv;
     char key[HTTP_REQUEST_LINE_SIZE];
     char value[HTTP_REQUEST_LINE_SIZE];
@@ -650,7 +682,10 @@ void xyq::xhttp_connect::do_http__()
                 this->update_status(xyq::xconnect_status::RUNNING);
                 clnt_rsp = rsp_func(clnt_req);
                 if (this->__status == RUNNING)
+                {
                     this->update_status(xyq::xconnect_status::FINISH);
+                    std::cout << "FINISH--> " << this->__cid << std::endl;
+                }
             }
             else
             {
@@ -664,7 +699,7 @@ void xyq::xhttp_connect::do_http__()
         // 返回http响应
         if (this->__status == xyq::xconnect_status::FINISH)
             this->put_http_response(clnt_rsp);
-        // 打个日志记录一下
+        update_status(xyq::xconnect_status::RESPONSE_FINISH);
         // 关闭与客户端连接
         this->xc_close();
     }
@@ -672,35 +707,34 @@ void xyq::xhttp_connect::do_http__()
     {
         std::cout << xyq::get_time_now() << " [ERROR] " << e.what() << std::endl;
     }
+    catch (...)
+    {
+        std::cout << xyq::get_time_now() << " [ERROR] " << std::endl;
+    }
 }
 void xyq::xhttp_connect::put_http_response(xyq::xhttp_response &rsp)
 {
+    /*
+    向客户端发送相应
+    */
     auto &&rsp_str = rsp.to_string();
     this->xc_write(rsp_str);
 }
 
 xyq::xhttp_response xyq::render(std::string path)
 {
+    /*
+    直接读取html文件
+    */
     // using xyq::template_path;
-    std::string fpath;
+    std::string fpath = template_path + path;
     xhttp_response ret;
-    if (access(path.data(), 0) == 0)
-    {
-        // path直接指出路径
-        fpath = path;
-    }
-    else if (access((template_path + path).data(), 0) == 0)
-    {
-        // 通过template和path计算出路径
-        fpath = template_path + path;
-    }
-    else
+    if (access(fpath.data(), 0) != 0)
     {
         // 未找到路径
         ret.not_found();
         return ret;
     }
-
     std::string buffer;
     std::fstream html_in;
     html_in.open(fpath, std::ios::in);
@@ -710,8 +744,140 @@ xyq::xhttp_response xyq::render(std::string path)
     }
     return ret;
 }
+xyq::xhttp_response xyq::render(std::string path, std::unordered_map<std::string, std::string> &maps)
+{
+    /*
+    渲染html文件
+    */
+    // using xyq::template_path;
+    xhttp_render reader(path, maps);
+    xyq::xhttp_response rsp;
+    if (reader.enable())
+    {
+        reader.scan();
+        rsp.add_content(reader.get_result());
+    }
+    else
+    {
+        rsp.not_found();
+    }
+    return rsp;
+}
+std::string xyq::xhttp_render::get_result()
+{
+    return this->result;
+}
+xyq::xhttp_render::xhttp_render(std::string path, std::unordered_map<std::string, std::string> &map)
+{
+    if (access((template_path + path).data(), 0) != 0)
+    {
+        this->path = "";
+        return;
+    }
+    this->maps = map;
+    this->path = template_path + path;
+    reader.open(this->path, std::ios::in);
+}
+bool xyq::xhttp_render::enable()
+{
+    return this->path.size();
+}
+void xyq::xhttp_render::scan()
+{
+    /*
+    扫描html文件进行处理
+    */
+    char ch;
+    bool flag = false;
+    while (not reader.eof())
+    {
+        ch = 0;
+        reader.read(&ch, 1);
+        switch (ch)
+        {
+        case '<':
+            flag = true;
+            break;
+        case '[':
+            if (flag)
+            {
+                trans();
+                flag = false;
+            }
+            else
+            {
+                this->result += ch;
+            }
+            break;
+        case 0:
+            break;
+        default:
+            if (flag)
+            {
+                flag = false;
+                this->result += '<';
+            }
+            this->result += ch;
+            break;
+        }
+    }
+    std::cout << this->result << std::endl;
+}
+void xyq::xhttp_render::trans()
+{
+    /*
+    对html文件进行内容替换
+    */
+    char ch;
+    bool flag = false;
+    std::string key;
+    while (not reader.eof())
+    {
+        ch = 0;
+        reader.read(&ch, 1);
+        if (ch == ']')
+        {
+            flag = true;
+        }
+        else if (ch == '>')
+        {
+            if (flag)
+                break;
+            else
+                continue;
+        }
+        else if (ch == ' ')
+        {
+            continue;
+        }
+        else if (ch == '\n')
+        {
+            return;
+        }
+        else if (ch == 0)
+        {
+            continue;
+        }
+        else
+        {
+            key += ch;
+        }
+    }
+    std::cout << key << std::endl;
+    if (key.size() == 0)
+        return;
+    auto &&it = this->maps.find(key);
+    if (it != this->maps.end())
+    {
+        this->result.append(maps[key]);
+    }
+}
+
 uint64_t xyq::xhttp_server::get_connect_id() noexcept
 {
+    /*
+    从服务器获取为连接分配的connect_id
+    */
     auto id = this->__connect_count++;
     return id;
 }
@@ -725,8 +891,14 @@ void xyq::xhttp_connect::set_pid(pthread_t id) noexcept
 }
 void xyq::xhttp_connect::time_out()
 {
-    if (this->__status != xconnect_status::RUNNING)
+    /* 连接超时处理 */
+    if (this->__status == xconnect_status::FINISH)
+    {
+        std::cout << "already closed" << std::endl;
+        std::cout << this->__status << std::endl;
         return;
+    }
+
     this->update_status(xconnect_status::TIME_OUT);
     pthread_cancel(this->__pid);
     xhttp_response rsp;
@@ -737,18 +909,20 @@ void xyq::xhttp_connect::time_out()
 }
 void xyq::xhttp_server::add_connect(xhttp_connect *con)
 {
+    /* 向服务器连接管理列表中中加入某个连接 */
     auto id = con->__cid;
     std::cout << "add_path: " << id << std::endl;
     this->connects[id] = con;
 }
 int xyq::xhttp_server::remove_connect(uint64_t id)
 {
+    /* 根据id在服务器中删除连接 */
     auto &&it = this->connects.find(id);
     if (it != this->connects.end())
     {
         delete it->second;
         this->connects.erase(it);
-        std::cout << "remove_path: " << id << std::endl;
+        // std::cout << "remove_path: " << id << std::endl;
         return 0;
     }
     else

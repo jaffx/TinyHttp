@@ -1,18 +1,23 @@
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
+#include "xServer.h"
 using namespace std;
 
-class A
-{
-public:
-    void ddd()
-    {
-        cout << 123 << endl;
-    }
-};
 int main()
 {
-    A *a = new A;
-    delete a;
-    a->ddd();
+    fstream rds("template/xyq.html");
+    char ch;
+    while (!rds.eof())
+    {
+        ch = 0;
+        rds.read(&ch, 1);
+        if (ch != 0)
+            std::cout << ch;
+    }
+    // std::unordered_map<std::string, std::string> mp;
+    // mp["1"] = "123";
+    // mp["2"] = "4435";
+    // xyq::xhttp_render rd("xyq.html", mp);
+    // rd.scan();
 }

@@ -1,5 +1,7 @@
 # bug记录
 
+记录一下遇到的有价值的bug
+
 ## 1. xhttp_connect导致的terminate问题
 
 ### 总体信息
@@ -20,7 +22,7 @@ xhttp_connect的do_http__()函数是被服务器异步调用，而xhttp_connect�
 
 - 是否解决： 是
 - 如何处理：
-    开始讲值备份传入线程内容，但造成资源的浪费。然后使用new在动态内存区创建对象，由xhttp_server收集xhttp_connect指针并统一进行管理。
+  开始讲值备份传入线程内容，但造成资源的浪费。然后使用new在动态内存区创建对象，由xhttp_server收集xhttp_connect指针并统一进行管理。
 
 ### 总结补充
 
@@ -47,7 +49,7 @@ xhttp_connect的do_http__()函数是被服务器异步调用，而xhttp_connect�
 
 - 是否解决： 是
 - 如何处理：
-    加上detach()
+  加上detach()
 
 ### 总结补充
 
@@ -63,7 +65,7 @@ xhttp_connect的do_http__()函数是被服务器异步调用，而xhttp_connect�
 
 ### 问题描述
 
-在做了异常处理之后，程序还是被xyq::xconnect_exception挂了
+ 在做了异常处理之后，程序还是被xyq::xconnect_exception挂了
 
 ### 问题引入原因
 
@@ -73,7 +75,7 @@ xhttp_connect的do_http__()函数是被服务器异步调用，而xhttp_connect�
 
 - 是否解决： 是
 - 如何处理：
-    新线程做异常处理
+  新线程做异常处理
 
 ### 总结补充
 
@@ -102,10 +104,10 @@ xhttp_connect的do_http__()函数是被服务器异步调用，而xhttp_connect�
 
 ### 问题解决方式
 
- - 是否解决：未完全解决
- - 如何处理：
-     1. 此时主要涉及到xhttp_connect::time_out()函数和xhttp_connect::do_http__()中业务处理逻辑的资源竞争。**对xhttp_connect对象增加了status状态，严格按照status进行线程管理**。RUNNING表示该连接正在进行业务处理逻辑，TIME_OUT表示该连接已经超时。time_out只对RUNNING状态的连接生效，且之后TIME_OUT的连接才会被回收资源。
-     2. **xhttp_connect::time_out()在停止线程之后，进行sleep等待线程确实停止再往下运行。但是会导致服务器阻塞，因此使用异步的方式调用time_out。**
+- 是否解决：未完全解决
+- 如何处理：
+  1. 此时主要涉及到xhttp_connect::time_out()函数和xhttp_connect::do_http__()中业务处理逻辑的资源竞争。**对xhttp_connect对象增加了status状态，严格按照status进行线程管理**。RUNNING表示该连接正在进行业务处理逻辑，TIME_OUT表示该连接已经超时。time_out只对RUNNING状态的连接生效，且之后TIME_OUT的连接才会被回收资源。
+  2. **xhttp_connect::time_out()在停止线程之后，进行sleep等待线程确实停止再往下运行。但是会导致服务器阻塞，因此使用异步的方式调用time_out。**
 
 ### 总结与补充
 

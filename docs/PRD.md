@@ -1,6 +1,7 @@
-# V1.1 线程管理模块
+# V1.1 
+## 线程管理模块
 
-## 问题
+### 问题
 
 1. 与客户端的通信由线程完成，业务处理逻辑存在超时的可能，对超时的线程需要及时停止。
 2. **如何感知业务处理逻辑的超时**
@@ -13,14 +14,14 @@
    * 资源处理由xhttp_connect类来解决
    * 进程可以把句柄绑定在xhttp_connect类中，回收资源的时候顺便关了进程就可以了
 
-## 总结
+### 总结
 
-    - 需要xhttp_server种需要一个列表保存xhttp_connect类的引用。
-     - xhttp_connect类中增加一个pthread_t类型的字段保存当前xhttp_connect对象的进程handle。
-     - 需要一个连接ID的概念，用来标注xhttp_connect对象，这个值同时保存在xhttp_server中。
-     - 需要一个独立线程扫描服务器中的连接，找到超时的连接进行关闭
+- 需要xhttp_server种需要一个列表保存xhttp_connect类的引用。
+- xhttp_connect类中增加一个pthread_t类型的字段保存当前xhttp_connect对象的进程handle。
+- 需要一个连接ID的概念，用来标注xhttp_connect对象，这个值同时保存在xhttp_server中。
+- 需要一个独立线程扫描服务器中的连接，找到超时的连接进行关闭
 
-## 方案
+### 方案
 
 1. xhttp_server：
    - 建立对连接的管理
@@ -31,4 +32,24 @@
    - 异步通信
      - 通信过程由连接发起，服务器只进行时间管理，调用超时连接的超时处理接口
      - 对自身状态进行标志，建立xconnect_status枚举类型
-     -
+
+# V1.2
+## HTML页面渲染能力支持
+### 问题
+  php、Django等支持对html页面的渲染能力，本框架暂不支持
+### 总结
+- 页面渲染就是字符串替换，将模板中的内容替换成响应的数据就可以了。
+- 如何确定替换位置？
+  - 通过特殊的符号标记html文档中的特定位置
+- 如何确定替换的内容
+  - 通过key-value的形式将数据保存在哈希表中，在html符号处留下key，通过key找到哈希表中的数据进行替换。
+### 方案 
+1. 设计一个新的render函数
+   `xyq::xhttp_response render(xyq::xhttp_request&, std::unordered_map<std::string, std::string>)`
+2. html内容：分割符号<[ key ]>
+3. 根据key把value替换到html文档中就可以了
+# 模板
+## 名称
+### 问题
+### 总结
+### 方案

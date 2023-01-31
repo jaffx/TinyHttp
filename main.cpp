@@ -14,27 +14,20 @@ xyq::xhttp_response Myfunc(xyq::xhttp_request req)
     }
     return clnt_rsp;
 }
-xyq::xhttp_response wait(xyq::xhttp_request req)
+xyq::xhttp_response test_html(xyq::xhttp_request req)
 {
-    xyq::xhttp_response clnt_rsp;
-    std::cout << "wait start!!" << std::endl;
-    while (true)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        // std::cout << "waiting!!" << std::endl;
-    }
-
-    std::cout << "wait finish!!" << std::endl;
-    return clnt_rsp;
+    std::unordered_map<std::string, std::string> mp;
+    mp["1"] = "123";
+    mp["2"] = "4435";
+    return xyq::render("xyq.html", mp);
 }
-
 int main()
 {
     // 初始化http服务器
     xyq::xhttp_server x_srv(XHTTP_IP, XHTTP_PORT);
     // 添加业务处理逻辑与url映射关系
     x_srv.add_path("/params", Myfunc);
-    x_srv.add_path("/", wait);
+    x_srv.add_path("/", test_html);
     // 运行服务器
     try
     {

@@ -45,13 +45,14 @@ namespace xyq
 
     enum xconnect_status
     {
-        XCONNECT_ERROR,
-        WAITING,
-        READY,
-        RUNNING,
-        TIME_OUT,
-        FINISH,
-        CLOSE,
+        XCONNECT_ERROR = -1, // 未使用
+        WAITING = 0,         // 未使用
+        READY = 1,           // 未使用
+        RUNNING = 2,         // 正在执行业务逻辑
+        TIME_OUT = 3,        // 超时
+        FINISH = 4,          // 完成处理，正在向客户端发送数据
+        RESPONSE_FINISH = 5, // 数据发送已完成
+        CLOSE = 6,           // 连接已关闭
     };
     // 基类声明
     class xserver_base
@@ -99,6 +100,7 @@ namespace xyq
     };
 
     // http服务声明
+
     class xhttp_request
     {
     protected:
@@ -158,7 +160,7 @@ namespace xyq
     class xhttp_connect : public xconnect_base
     {
     private:
-        xhttp_server *__server=NULL;
+        xhttp_server *__server = NULL;
         uint64_t __cid = 0;
         pthread_t __pid;
         std::chrono::system_clock::time_point start_time_point;
@@ -207,6 +209,21 @@ namespace xyq
         virtual void run();
     };
 
+    class xhttp_render
+    {
+    private:
+        std::string path = "";
+        std::fstream reader;
+        std::string result;
+        std::unordered_map<std::string, std::string> maps;
+
+    public:
+        xhttp_render(std::string path, std::unordered_map<std::string, std::string> &);
+        void scan();
+        void trans();
+        bool enable();
+        std::string get_result();
+    };
     // 服务异常类声明
     class xserver_exception : public std::exception
     {
@@ -247,5 +264,6 @@ namespace xyq
     };
     // 函数定义
     xhttp_response render(std::string path);
+    xhttp_response render(std::string path, std::unordered_map<std::string, std::string> &);
 }
 #endif
