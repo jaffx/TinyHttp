@@ -1,6 +1,6 @@
 #ifndef X_SERVER_H
 #define X_SERVER_H
-#include "../xyq/xyq.h"
+#include "xyq.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -62,7 +62,7 @@ namespace xyq
         struct sockaddr_in __addr;
         std::string __ip, __protocal;
         __uint16_t __port;
-        xserver_status __status = NOT_INIT, __last_status = NOT_INIT;
+        xserver_status __status, __last_status;
 
     public:
         xserver_base(std::string protocal, std::string ip, __uint16_t port);
@@ -79,7 +79,7 @@ namespace xyq
     {
     protected:
         int __socket;
-        bool ready = true;
+        bool ready;
         struct sockaddr_in __addr;
         std::string __ip;
         __uint16_t __port;
@@ -238,9 +238,10 @@ namespace xyq
         {
             this->message = message;
         }
-        virtual const char *what()
+        virtual std::string what()
         {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]##  " << message << std::endl;
+            // std::cout << "[" << __FILE__ << ":" << __LINE__ << "]##  " << message << std::endl;
+            return this->message;
         }
     };
 
@@ -257,9 +258,10 @@ namespace xyq
         {
             this->message = message;
         }
-        virtual const char *what()
+        virtual std::string what()
         {
-            std::cout << "[" << __FILE__ << ":" << __LINE__ << "]##  " << message << std::endl;
+            // std::cout << "[" << __FILE__ << ":" << __LINE__ << "]##  " << message << std::endl;
+            return this->message;
         }
     };
     // 函数定义

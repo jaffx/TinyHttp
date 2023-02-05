@@ -55,7 +55,7 @@ int xyq::xserver_base::xs_bind()
         }
         // bind成功
         this->update_status(BIND_READY);
-        return 1;
+        return 0;
         break;
     case (XSERVER_ERROR):
         throw xyq::xserver_exception("服务器发生错误，无法进行BIND操作");
@@ -63,6 +63,7 @@ int xyq::xserver_base::xs_bind()
     default:
         break;
     }
+    return -1;
 }
 int xyq::xserver_base::xs_listen()
 {
@@ -94,6 +95,7 @@ int xyq::xserver_base::xs_listen()
     default:
         break;
     }
+    return -1;
 }
 void xyq::xserver_base::xs_close()
 {
@@ -247,7 +249,7 @@ void xyq::xhttp_server::run()
 void xyq::xserver_base::show_info() const
 {
     char buffer[128];
-    sprintf(buffer, "%s/%s:%d %d %d", this->__protocal.data(), this->__ip.data(), this->__port, this->__status, this->__socket);
+    snprintf(buffer, sizeof(buffer), "%s/%s:%d %d %d", this->__protocal.data(), this->__ip.data(), this->__port, this->__status, this->__socket);
     std::cout << buffer << std::endl;
 }
 
@@ -271,7 +273,7 @@ xyq::xconnect_base::xconnect_base(int socket, const struct sockaddr_in &addr)
 }
 int xyq::xconnect_base::xc_write(const std::string &content)
 {
-    this->xc_write(content.data());
+    return this->xc_write(content.data());
 }
 int xyq::xconnect_base::xc_write(const char *content)
 {
@@ -373,7 +375,7 @@ int xyq::xconnect_base::get_line()
 void xyq::xconnect_base::show_info() const
 {
     char buffer[128];
-    sprintf(buffer, "CLINET CONNECTION:%d %s", this->__socket, this->__ip.data());
+    snprintf(buffer,sizeof(buffer),  "CLINET CONNECTION:%d %s", this->__socket, this->__ip.data());
     std::cout << buffer << std::endl;
 }
 

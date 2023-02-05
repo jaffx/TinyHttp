@@ -1,0 +1,3 @@
+/Users/lyn/codes/Cpp/vscode/xServer/xServer/build/CMakeFiles/xServer.dir
+/Users/lyn/codes/Cpp/vscode/xServer/xServer/build/CMakeFiles/edit_cache.dir
+/Users/lyn/codes/Cpp/vscode/xServer/xServer/build/CMakeFiles/rebuild_cache.dir
