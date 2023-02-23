@@ -5,6 +5,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(SRC_LIST src/xServer.cpp src/xyq.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 link_directories(/Users/lyn/codes/Cpp/vscode/xServer/xServer/lib)
-# add_library(xyq STATIC src/xyq.cpp)
+
+
 add_library(xServer STATIC ${SRC_LIST})
 target_link_libraries(xServer xyq)
