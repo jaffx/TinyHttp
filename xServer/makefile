@@ -1,7 +1,7 @@
 SRC=xServer.cpp
 TARGET=xServer.o
 LIBTARGET=libxServer.a
-STD=-std=c++17
+STD=-std=c++17 -Wc++11-extensions
 LIBDIR=-L../xyq
 LIBS=-lxyq
 HEADER_DIR=-I../xyq

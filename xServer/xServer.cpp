@@ -331,22 +331,32 @@ void xyq::xhttp_connect::xc_close()
 {
     if (this->__status == xyq::xconnect_status::CLOSE)
         return;
+    shutdown(this->__socket, 2);
     close(this->__socket);
     this->update_status(xyq::xconnect_status::CLOSE);
     if (this->__server != NULL)
         this->__server->remove_connect(this->__cid);
+}
+int xyq::xconnect_base::get_content_from_socket(){
+    timeval tv {1, 0};
+    setsockopt(this->__socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    memset(this->__cbuffer, 0, sizeof(this->__cbuffer));
+    this->cbuf_len= recv(this->__socket, __cbuffer, sizeof(this->__cbuffer), 0);
+    return this->cbuf_len;    
 }
 int xyq::xconnect_base::get_line()
 {
     /*
     @brief 从客户端连接的缓冲区读取一行内容
     */
+    
     char ch;
     char *dst = this->__buffer;
     int buf_size = sizeof(this->__buffer);
     int cnt = 0;
     memset(this->__buffer, 0, buf_size);
-    while (read(this->__socket, &ch, 1) > 0)
+    int red_ret ;
+    while ((red_ret = read(this->__socket, &ch, 1)) > 0)
     {
         if (ch == '\r')
         {
@@ -367,6 +377,9 @@ int xyq::xconnect_base::get_line()
                 throw xyq::xconnect_exception("读取长度超过buffer最大容量");
             }
         }
+    }
+    if(red_ret<=0){
+        std::cout<<"网络IO超时"<<std::endl;
     }
     return cnt;
 }
@@ -562,6 +575,7 @@ xyq::xhttp_request xyq::xhttp_connect::get_http_request()
     xhttp_request clnt_req;
     // 解析请求头
     int line_length = 0;
+
     line_length = this->get_line();
     if (line_length <= 6)
     {
@@ -674,6 +688,7 @@ void xyq::xhttp_connect::do_http__()
         else
         {
             auto &&path = clnt_req.get_path();
+            std::string file_path = template_path+path;
             std::cout << xyq::get_time_now() << "<" << this->__cid << ">"
                       << "[" << clnt_req.get_ip() << "]: " << clnt_req.get_method() << " " << clnt_req.get_path() << std::endl;
             auto rsp_func = this->__server->get_path_mapping(path);
@@ -684,8 +699,14 @@ void xyq::xhttp_connect::do_http__()
                 if (this->__status == RUNNING)
                 {
                     this->update_status(xyq::xconnect_status::FINISH);
-                    std::cout << "FINISH--> " << this->__cid << std::endl;
+                    // std::cout << "FINISH--> " << this->__cid << std::endl;
                 }
+            }
+            else if(access(file_path.c_str(), 0)==0){
+                auto && file_content = xyq::get_content_from_file(file_path);
+                clnt_rsp.set_content(file_content);
+                clnt_rsp.set_header("content-type", "text/css");
+                this->update_status(xyq::xconnect_status::FINISH);
             }
             else
             {
@@ -782,6 +803,8 @@ bool xyq::xhttp_render::enable()
 {
     return this->path.size();
 }
+
+
 void xyq::xhttp_render::scan()
 {
     /*
@@ -821,7 +844,7 @@ void xyq::xhttp_render::scan()
             break;
         }
     }
-    std::cout << this->result << std::endl;
+    // std::cout << this->result << std::endl;
 }
 void xyq::xhttp_render::trans()
 {
@@ -863,7 +886,7 @@ void xyq::xhttp_render::trans()
             key += ch;
         }
     }
-    std::cout << key << std::endl;
+    // std::cout << key << std::endl;
     if (key.size() == 0)
         return;
     auto &&it = this->maps.find(key);
@@ -911,7 +934,7 @@ void xyq::xhttp_server::add_connect(xhttp_connect *con)
 {
     /* 向服务器连接管理列表中中加入某个连接 */
     auto id = con->__cid;
-    std::cout << "add_path: " << id << std::endl;
+    // std::cout << "add_path: " << id << std::endl;
     this->connects[id] = con;
 }
 int xyq::xhttp_server::remove_connect(uint64_t id)
@@ -929,4 +952,25 @@ int xyq::xhttp_server::remove_connect(uint64_t id)
     {
         return -1;
     }
+}
+
+std::string xyq::get_content_from_file(std::string path){
+    if(access(path.c_str(), 0)!=0){
+        // std::cout<<"文件不存在"<<std::endl;
+        return "";
+    }
+    std::fstream reader(path);
+    char buf [2048];
+    char c;
+    std::string ret;
+    while(not reader.eof()){
+        // memset(buf, 0, sizeof(buf));
+        // reader.getline(buf, sizeof(buf));
+        // ret+=buf;
+        // ret.push_back('\n');
+        reader.read(&c, 1);
+        ret+=c;
+    }
+    return ret;
+    
 }

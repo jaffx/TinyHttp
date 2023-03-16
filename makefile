@@ -1,6 +1,6 @@
-LIBS_DIR=-Lxyq -LxServer
-LIBS=-lxyq -lxServer
-HEADERS_DIR=-Ixyq -IxServer
+LIBS_DIR=-Lxyq -LxServer -L/usr/local/lib
+LIBS=-lxyq -lxServer -ljsoncpp
+HEADERS_DIR=-Ixyq -IxServer -I/usr/local/include
 
 STD=-std=c++17
 SRC=main.cpp

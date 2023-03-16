@@ -18,15 +18,15 @@
 #define CLNT_CONNECT_BUFFER_SIZE 65536 // 客户端链接写buffer长度
 #define HTTP_REQUEST_LINE_SIZE 8192    // 客户端请求行长度上限
 #define HTTP_URL_SIZE 2048             // url长度上限
-#define CONNECT_LIFE_TIME 12           // 连接的声明周期，单位秒
-#define CONNECT_SCAN_TIME 1            // 连接扫描周期
+#define CONNECT_LIFE_TIME 4          // 连接的生命周期，单位秒
+#define CONNECT_SCAN_TIME 2            // 连接扫描周期
 
 namespace xyq
 {
     // 类声明
     class xconnect_base;
     class xhttp_response;
-    class xhttp_request;
+class xhttp_request;
     class xhttp_server;
     class xserver_exception;
     typedef xhttp_response (*xhttp_rsp_func)(xhttp_request);
@@ -84,6 +84,8 @@ namespace xyq
         std::string __ip;
         __uint16_t __port;
         char __buffer[CLNT_CONNECT_BUFFER_SIZE];
+        char __cbuffer[CLNT_CONNECT_BUFFER_SIZE];
+        int cbuf_len;
         xconnect_status __status, __last_status;
         inline void update_status(xconnect_status) noexcept;
 
@@ -95,6 +97,7 @@ namespace xyq
         void xc_close();
         std::string get_content() const;
         int get_line();
+        int get_content_from_socket();
         virtual void show_info() const;
         virtual void run() = 0;
     };
@@ -216,7 +219,6 @@ namespace xyq
         std::fstream reader;
         std::string result;
         std::unordered_map<std::string, std::string> maps;
-
     public:
         xhttp_render(std::string path, std::unordered_map<std::string, std::string> &);
         void scan();
@@ -263,6 +265,7 @@ namespace xyq
         }
     };
     // 函数定义
+    std::string get_content_from_file(std::string);
     xhttp_response render(std::string path);
     xhttp_response render(std::string path, std::unordered_map<std::string, std::string> &);
 }
